@@ -4,38 +4,47 @@ import SearchBox from '../components/SearchBox'
 import 'tachyons';
 import './App.css';
 
+//Connecting App.js with Redux
+import {setSearchField, requestRobots} from '../actions';
+import {connect} from 'react-redux';
+
+const mapStateToProps = state => {
+	return {
+		searchField: state.searchRobots.searchField,
+		robots: state.requestRobots.robots,
+		isPending: state.requestRobots.isPending,
+		errorState: state.requestRobots.errorState
+	}
+}
+
+const mapDispatchToProps = dispatch => {
+	//dispatch is what triggers an action
+	//To dispatch the action in the reducer
+	return {
+		onSearchChange: (event) => dispatch(setSearchField(event.target.value)),
+		onRequestRobots: () => dispatch(requestRobots())
+	}
+
+}
+
+
 class App extends Component{
 	
-	constructor(){
-		super();
-		this.state = {
-			robots: [],
-			searchfield: ''
-		};
-	}
 
 	componentDidMount(){
-		fetch('https://jsonplaceholder.typicode.com/users')
-		.then(response => response.json())
-		.then(users => {
-			this.setState({robots: users});
-		});
+		console.log('Reactr Store', this.props.store)
+		this.props.onRequestRobots();
 	}
 
-	onSearchChange(e){
-		//console.log(this.state.searchfield);
-		this.setState({
-			searchfield: e.target.value
-		});
-	}
+	
 
 
 	render(){
-		const filteredRobots = this.state.robots.filter(robot => {
-			return robot.name.toLowerCase().includes(this.state.searchfield.toLowerCase());
+		const filteredRobots = this.props.robots.filter(robot => {
+			return robot.name.toLowerCase().includes(this.props.searchField.toLowerCase());
 		})
 		//To provide for long load times
-		if(this.state.robots.length === 0){
+		if(this.props.isPending){
 			return (
 				<h1> Loading </h1>
 				);
@@ -45,7 +54,7 @@ class App extends Component{
 				<div className="pa3 tc">
 					
 					<h1 className="f1"> Robofriends </h1>
-					<SearchBox searchChange={this.onSearchChange.bind(this)}/>	
+					<SearchBox searchChange={this.props.onSearchChange}/>	
 					<CardList robots={filteredRobots}/>
 				</div>
 				);
@@ -53,4 +62,4 @@ class App extends Component{
 	}
 }
 
-export default App;
+export default connect(mapStateToProps, mapDispatchToProps)(App);
